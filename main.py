@@ -94,9 +94,10 @@ def level_one_encrypt(Imagename):
 def construct_enc_image(ciphertext,relength,width,height):
     asciicipher = binascii.hexlify(ciphertext)
     def replace_all(text, dic):
-        for i, j in dic.iteritems():
-            text = text.replace(i, j)
-        return text
+        res = text
+        for i, j in dic.items():
+            res = res.replace(i, j)
+        return res
 
     # use replace function to replace ascii cipher characters with numbers
     reps = {'a':'1', 'b':'2', 'c':'3', 'd':'4', 'e':'5', 'f':'6', 'g':'7', 'h':'8', 'i':'9', 'j':'10', 'k':'11', 'l':'12', 'm':'13', 'n':'14', 'o':'15', 'p':'16', 'q':'17', 'r':'18', 's':'19', 't':'20', 'u':'21', 'v':'22', 'w':'23', 'x':'24', 'y':'25', 'z':'26'}
@@ -114,7 +115,7 @@ def construct_enc_image(ciphertext,relength,width,height):
             encimageone.append("101")
 
     encimagetwo=[(int(encimageone[int(i)]),int(encimageone[int(i+1)]),int(encimageone[int(i+2)])) for i in range(0, len(encimageone), step)]
-    print(len(encimagetwo))
+    # print(len(encimagetwo))
     while (int(relength) != len(encimagetwo)):
         encimagetwo.pop()
 
@@ -137,7 +138,7 @@ def encrypt(imagename,password):
     # break up the image into a list, each with pixel values and then append to a string
     for y in range(0,height):
         for x in range(0,width):
-            print (pix[x,y]) 
+            # print (pix[x,y]) 
             plaintext.append(pix[x,y])
     print(width)
     print(height)
@@ -160,12 +161,12 @@ def encrypt(imagename,password):
         plaintextstr = plaintextstr + "n"
 
     # encrypt plaintext
-    obj = AES.new(password, AES.MODE_CBC, 'This is an IV456')
-    ciphertext = obj.encrypt(plaintextstr)
+    obj = AES.new(bytes(password), AES.MODE_CBC, b'This is an IV456')
+    ciphertext = obj.encrypt(plaintextstr.encode())
 
     # write ciphertext to file for analysis
     cipher_name = imagename + ".crypt"
-    g = open(cipher_name, 'w')
+    g = open(cipher_name, 'wb')
     g.write(ciphertext)
     construct_enc_image(ciphertext,relength,width,height)
     print("Visual Encryption done.......")
@@ -183,12 +184,12 @@ def decrypt(ciphername,password):
     new_image = generate_image_back(secret_image, ima)
     new_image.save("2-share_decrypt.jpeg")
     print("2-share Decryption done....")
-    cipher = open(ciphername,'r')
+    cipher = open(ciphername,'rb')
     ciphertext = cipher.read()
 
     # decrypt ciphertext with password
-    obj2 = AES.new(password, AES.MODE_CBC, 'This is an IV456')
-    decrypted = obj2.decrypt(ciphertext)
+    obj2 = AES.new(bytes(password), AES.MODE_CBC, b'This is an IV456')
+    decrypted = obj2.decrypt(ciphertext.decode())
 
     # parse the decrypted text back into integer string
     decrypted = decrypted.replace("n","")
@@ -256,7 +257,7 @@ class App:
   def __init__(self, master):
     global passg
     title = "Image Encryption"
-    author = "Made by Aditya"
+    author = "Made by Idris SADDI"
     msgtitle = Message(master, text =title)
     msgtitle.config(font=('helvetica', 17, 'bold'), width=200)
     msgauthor = Message(master, text=author)
