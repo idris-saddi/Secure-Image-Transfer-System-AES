@@ -87,7 +87,7 @@ def level_one_encrypt(Imagename):
 
 # -------------------- Construct Encrypted Image  ----------------#
 def construct_enc_image(ciphertext,relength,width,height):
-    asciicipher = binascii.hexlify(ciphertext)
+    asciicipher = binascii.hexlify(ciphertext).decode()
     def replace_all(text, dic):
         res = text
         for i, j in dic.items():
@@ -184,7 +184,16 @@ def decrypt(ciphername,password):
 
     # decrypt ciphertext with password
     obj2 = AES.new(bytes(password), AES.MODE_CBC, b'This is an IV456')
-    decrypted = obj2.decrypt(ciphertext.decode())
+    try:
+        decrypted_bytes = obj2.decrypt(ciphertext)
+    except Exception as e:
+        print("Decryption failed:", e)
+
+    # remove padding
+    decrypted_bytes = decrypted_bytes.rstrip(b'n')
+
+    # convert bytes to string
+    decrypted = decrypted_bytes.decode()
 
     # parse the decrypted text back into integer string
     decrypted = decrypted.replace("n","")
