@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import FileResponse
 from logic import encrypt, decrypt
