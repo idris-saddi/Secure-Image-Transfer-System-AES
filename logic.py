@@ -3,19 +3,29 @@
 
 from __future__ import division, print_function, unicode_literals
 
-
 from PIL import Image
 from Crypto.Cipher import AES
 import binascii
 import numpy as np
-
+from os.path import join as path_join
+from os import makedirs
+from os.path import exists
 
 global password 
+files_folder_path = "files/"
+if not exists(files_folder_path):
+    makedirs(files_folder_path)
+cipher_folder_path = "cipher_files/"
+if not exists(cipher_folder_path):
+    makedirs(cipher_folder_path)
+
+# ----------------- Utility Functions ---------------------#
 
 def load_image(name):
     return Image.open(name)
 
 # ----------------- Functions for encryption ---------------------#
+
 def prepare_message_image(image, size):
     if size != image.size:
         image = image.resize(size, Image.ANTIALIAS)
@@ -54,7 +64,6 @@ def generate_ciphered_image(secret_image, prepared_image):
                 
     return ciphered_image
 
-
 def generate_image_back(secret_image, ciphered_image):
     width, height = secret_image.size
     new_image = Image.new(mode = "RGB", size = (int(width / 2), int(height / 2)))
@@ -69,23 +78,21 @@ def generate_image_back(secret_image, ciphered_image):
                
     return new_image
 
-
 #------------------------Encryption -------------------#
+
 def level_one_encrypt(Imagename):
     message_image = load_image(Imagename)
     size = message_image.size
-    width, height = size
 
     secret_image = generate_secret(size)
-    secret_image.save("secret.jpeg")
+    secret_image.save(path_join(files_folder_path, "secret.jpeg"))
 
     prepared_image = prepare_message_image(message_image, size)
     ciphered_image = generate_ciphered_image(secret_image, prepared_image)
-    ciphered_image.save("2-share_encrypt.jpeg")
-
-
+    ciphered_image.save(path_join(files_folder_path, "2-share_encrypt.jpeg"))
 
 # -------------------- Construct Encrypted Image  ----------------#
+
 def construct_enc_image(ciphertext,relength,width,height):
     asciicipher = binascii.hexlify(ciphertext).decode()
     def replace_all(text, dic):
@@ -98,28 +105,29 @@ def construct_enc_image(ciphertext,relength,width,height):
     reps = {'a':'1', 'b':'2', 'c':'3', 'd':'4', 'e':'5', 'f':'6', 'g':'7', 'h':'8', 'i':'9', 'j':'10', 'k':'11', 'l':'12', 'm':'13', 'n':'14', 'o':'15', 'p':'16', 'q':'17', 'r':'18', 's':'19', 't':'20', 'u':'21', 'v':'22', 'w':'23', 'x':'24', 'y':'25', 'z':'26'}
     asciiciphertxt = replace_all(asciicipher, reps)
 
-        # construct encrypted image
+    # construct encrypted image
     step = 3
     encimageone=[asciiciphertxt[i:i+step] for i in range(0, len(asciiciphertxt), step)]
-       # if the last pixel RGB value is less than 3-digits, add a digit a 1
+    # if the last pixel RGB value is less than 3-digits, add a digit a 1
     if int(encimageone[len(encimageone)-1]) < 100:
         encimageone[len(encimageone)-1] += "1"
-        # check to see if we can divide the string into partitions of 3 digits.  if not, fill in with some garbage RGB values
+    # check to see if we can divide the string into partitions of 3 digits.  if not, fill in with some garbage RGB values
     if len(encimageone) % 3 != 0:
         while (len(encimageone) % 3 != 0):
             encimageone.append("101")
 
     encimagetwo=[(int(encimageone[int(i)]),int(encimageone[int(i+1)]),int(encimageone[int(i+2)])) for i in range(0, len(encimageone), step)]
-    # print(len(encimagetwo))
+
     while (int(relength) != len(encimagetwo)):
         encimagetwo.pop()
 
     encim = Image.new("RGB", (int(width),int(height)))
     encim.putdata(encimagetwo)
-    encim.save("visual_encrypt.jpeg")
 
+    encim.save(path_join(files_folder_path, "visual_encrypt.jpeg"))
 
 #------------------------- Visual-encryption -------------------------#
+
 def encrypt(imagename,password):
     plaintext = list()
     plaintextstr = ""
@@ -127,23 +135,18 @@ def encrypt(imagename,password):
     im = Image.open(imagename) 
     pix = im.load()
 
-    width = im.size[0]
-    height = im.size[1]
+    width , height = im.size
     
     # break up the image into a list, each with pixel values and then append to a string
     for y in range(0,height):
         for x in range(0,width):
-            # print (pix[x,y]) 
             plaintext.append(pix[x,y])
-    print(width)
-    print(height)
 
-    # add 100 to each tuple value to make sure each are 3 digits long.  
+    # add 100 to each tuple value to make sure each are 3 digits long. 
     for i in range(0,len(plaintext)):
         for j in range(0,3):
             aa = int(plaintext[i][j])+100
             plaintextstr = plaintextstr + str(aa)
-
 
     # length save for encrypted image reconstruction
     relength = len(plaintext)
@@ -160,24 +163,22 @@ def encrypt(imagename,password):
     ciphertext = obj.encrypt(plaintextstr.encode())
 
     # write ciphertext to file for analysis
-    cipher_name = imagename + ".crypt"
+    cipher_name = path_join(cipher_folder_path, imagename.split("/")[-1] + ".crypt")
     g = open(cipher_name, 'wb')
     g.write(ciphertext)
     construct_enc_image(ciphertext,relength,width,height)
     print("Visual Encryption done.......")
-    level_one_encrypt("visual_encrypt.jpeg")
+    level_one_encrypt(path_join(files_folder_path,"visual_encrypt.jpeg"))
     print("2-Share Encryption done.......")
-        
-
-
 
 # ---------------------- decryption ---------------------- #
+
 def decrypt(ciphername,password):
 
-    secret_image = Image.open("secret.jpeg")
-    ima = Image.open("2-share_encrypt.jpeg")
+    secret_image = Image.open(path_join(files_folder_path, "secret.jpeg"))
+    ima = Image.open(path_join(files_folder_path, "2-share_encrypt.jpeg"))
     new_image = generate_image_back(secret_image, ima)
-    new_image.save("2-share_decrypt.jpeg")
+    new_image.save(path_join(files_folder_path, "2-share_decrypt.jpeg"))
     print("2-share Decryption done....")
     cipher = open(ciphername,'rb')
     ciphertext = cipher.read()
@@ -216,5 +217,5 @@ def decrypt(ciphername,password):
     # reconstruct image from list of pixel RGB tuples
     newim = Image.new("RGB", (int(newwidth), int(newheight)))
     newim.putdata(finaltexttwo)
-    newim.save("visual_decrypt.jpeg")
+    newim.save(path_join(files_folder_path, "visual_decrypt.jpeg"))
     print("Visual Decryption done......")
