@@ -7,11 +7,15 @@ import tkinter.messagebox as tkMessageBox
 import hashlib
 import os
 
+# message box alerts
 def pass_alert():
    tkMessageBox.showinfo("Password Alert","Please enter a password.")
 
 def enc_success(imagename):
    tkMessageBox.showinfo("Success","Encrypted Image: " + imagename)
+
+def dec_success(outputfilename):
+    tkMessageBox.showinfo("Success","Decrypted Image: " + outputfilename)
 
 # image encrypt button event
 def image_open():
@@ -25,6 +29,7 @@ def image_open():
         filename = tkFileDialog.askopenfilename()
         file_path_e = os.path.dirname(filename)
         encrypt(filename,password)
+        enc_success(filename)
 
 # image decrypt button event
 def cipher_open():
@@ -37,7 +42,8 @@ def cipher_open():
         password = hashlib.sha256(dec_pass.encode()).digest()
         filename = tkFileDialog.askopenfilename()
         file_path_d = os.path.dirname(filename)
-        decrypt(filename,password)
+        outputfilename = decrypt(filename,password)
+        dec_success(outputfilename)
 
 class App:
   def __init__(self, master):

@@ -12,6 +12,9 @@ from os import makedirs
 from os.path import exists
 
 global password 
+
+# ----------------- Create Folders ---------------------#
+
 files_folder_path = "files/"
 if not exists(files_folder_path):
     makedirs(files_folder_path)
@@ -217,5 +220,7 @@ def decrypt(ciphername,password):
     # reconstruct image from list of pixel RGB tuples
     newim = Image.new("RGB", (int(newwidth), int(newheight)))
     newim.putdata(finaltexttwo)
-    newim.save(path_join(files_folder_path, "visual_decrypt.jpeg"))
+    outputfilename = path_join(files_folder_path, "visual_decrypt.jpeg")
+    newim.save(outputfilename)
     print("Visual Decryption done......")
+    return outputfilename
