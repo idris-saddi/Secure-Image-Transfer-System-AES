@@ -173,6 +173,7 @@ def encrypt(imagename,password):
     print("Visual Encryption done.......")
     level_one_encrypt(path_join(files_folder_path,"visual_encrypt.jpeg"))
     print("2-Share Encryption done.......")
+    return cipher_name
 
 # ---------------------- decryption ---------------------- #
 
