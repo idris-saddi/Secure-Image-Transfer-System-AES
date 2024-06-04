@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 from logic import encrypt, decrypt
 
 from tkinter import *
